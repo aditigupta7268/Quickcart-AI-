@@ -251,13 +251,6 @@ Receipt
 
 ---
 
-## 🔮 Future Improvements
-
-* Real UPI payment integration
-* Smart inventory prediction
-* Admin dashboard
-* Multi-store support
-* Cloud deployment
 
 ---
 
@@ -273,3 +266,4 @@ The LNM Institute of Information Technology
 ---
 
 ⭐ If you found this project useful, please consider giving it a star!
+
