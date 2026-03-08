@@ -1,0 +1,1577 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scanner — QuickCart AI</title>
+    <link rel="icon" type="image/svg+xml"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><defs><linearGradient id='a' x1='0' y1='0' x2='1' y2='1'><stop offset='0%25' stop-color='%234f8dff'/><stop offset='100%25' stop-color='%237c3aed'/></linearGradient></defs><rect width='32' height='32' rx='7' fill='url(%23a)'/></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --bg: #0B0B0F;
+            --bg2: #0f0f15;
+            --bg3: #13131c;
+            --surface: rgba(255, 255, 255, 0.04);
+            --surface2: rgba(255, 255, 255, 0.07);
+            --border: rgba(255, 255, 255, 0.08);
+            --border2: rgba(255, 255, 255, 0.14);
+            --text: #f0f0f8;
+            --text2: #8b8ba0;
+            --text3: #5a5a72;
+            --blue: #4f8dff;
+            --violet: #7c3aed;
+            --neon: #00f5c4;
+            --grad: linear-gradient(135deg, #4f8dff 0%, #7c3aed 100%);
+            --font: 'Bricolage Grotesque', sans-serif;
+            --mono: 'JetBrains Mono', monospace;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: var(--font);
+            background: var(--bg);
+            color: var(--text);
+            overflow-x: hidden;
+            min-height: 100vh;
+            cursor: none;
+        }
+
+        .cursor {
+            position: fixed;
+            width: 12px;
+            height: 12px;
+            background: var(--neon);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            transform: translate(-50%, -50%);
+            mix-blend-mode: screen;
+        }
+
+        .cursor-ring {
+            position: fixed;
+            width: 36px;
+            height: 36px;
+            border: 1.5px solid rgba(0, 245, 196, 0.4);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9998;
+            transform: translate(-50%, -50%);
+            transition: width 0.2s, height 0.2s;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 9997;
+            opacity: 0.5;
+        }
+
+        ::-webkit-scrollbar {
+            width: 3px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--violet);
+            border-radius: 2px;
+        }
+
+        /* ── NAV ──────────────────────────────────────────────────────── */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            padding: 0 40px;
+            height: 68px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            border-bottom: 1px solid var(--border);
+            background: rgba(11, 11, 15, 0.88);
+            backdrop-filter: blur(20px);
+        }
+
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.2rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            text-decoration: none;
+            color: var(--text);
+        }
+
+        .nav-logo-icon {
+            width: 32px;
+            height: 32px;
+            background: var(--grad);
+            border-radius: 9px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .nav-logo span {
+            color: var(--text2);
+            font-weight: 400;
+        }
+
+        .nav-center {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .nav-tab {
+            padding: 7px 14px;
+            border-radius: 9px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: var(--text2);
+            text-decoration: none;
+            transition: all 0.18s;
+            border: 1px solid transparent;
+        }
+
+        .nav-tab:hover {
+            background: var(--surface2);
+            color: var(--text);
+        }
+
+        .nav-tab.active {
+            background: rgba(79, 141, 255, 0.1);
+            border-color: rgba(79, 141, 255, 0.25);
+            color: var(--blue);
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-user {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.82rem;
+            color: var(--text2);
+            font-weight: 600;
+        }
+
+        .nav-avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: var(--grad);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: 800;
+            color: #fff;
+            text-transform: uppercase;
+        }
+
+        .btn-ghost {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            border-radius: 9px;
+            font-family: var(--font);
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            background: transparent;
+            color: var(--text2);
+            border: 1px solid var(--border2);
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+
+        .btn-ghost:hover {
+            background: var(--surface2);
+            color: var(--text);
+        }
+
+        /* ── PAGE ──────────────────────────────────────────────────────── */
+        .page-bg {
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(79, 141, 255, 0.06) 0%, transparent 60%), radial-gradient(ellipse 60% 50% at 80% 80%, rgba(0, 245, 196, 0.04) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        .page-wrap {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 88px 32px 60px;
+            min-height: 100vh;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ── PAGE HEADER ──────────────────────────────────────────────── */
+        .page-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 36px;
+            padding-top: 16px;
+        }
+
+        .page-heading {
+            font-size: 2rem;
+            font-weight: 800;
+            letter-spacing: -0.04em;
+            line-height: 1.1;
+        }
+
+        .page-heading .grad {
+            background: var(--grad);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .page-sub {
+            font-size: 0.88rem;
+            color: var(--text2);
+            margin-top: 6px;
+            line-height: 1.6;
+        }
+
+        .cart-floater {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--bg3);
+            border: 1px solid var(--border2);
+            border-radius: 14px;
+            padding: 10px 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .cart-floater:hover {
+            border-color: rgba(0, 245, 196, 0.35);
+            background: rgba(0, 245, 196, 0.05);
+        }
+
+        .cf-icon {
+            font-size: 1.2rem;
+        }
+
+        .cf-text {
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: var(--text2);
+        }
+
+        .cf-count {
+            font-size: 0.82rem;
+            font-family: var(--mono);
+            color: var(--neon);
+            font-weight: 700;
+        }
+
+        .cf-badge {
+            background: var(--neon);
+            color: #000;
+            font-size: 0.65rem;
+            font-weight: 800;
+            padding: 2px 7px;
+            border-radius: 50px;
+            font-family: var(--mono);
+        }
+
+        /* ── MAIN GRID ─────────────────────────────────────────────────── */
+        .scanner-grid {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 28px;
+            align-items: start;
+        }
+
+        /* ── SCANNER WIDGET ────────────────────────────────────────────── */
+        .scan-widget {
+            background: var(--bg3);
+            border: 1px solid var(--border2);
+            border-radius: 24px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .scan-widget::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 10%;
+            right: 10%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(79, 141, 255, 0.4), transparent);
+        }
+
+        .scan-widget-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 18px 22px 0;
+        }
+
+        .scan-widget-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.95rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+
+        .scan-widget-status {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            font-size: 0.75rem;
+            color: var(--neon);
+            font-weight: 700;
+            font-family: var(--mono);
+        }
+
+        .scan-status-pulse {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--neon);
+            box-shadow: 0 0 8px var(--neon);
+            animation: pls 2s infinite;
+        }
+
+        @keyframes pls {
+
+            0%,
+            100% {
+                opacity: 1;
+                box-shadow: 0 0 8px var(--neon);
+            }
+
+            50% {
+                opacity: 0.4;
+                box-shadow: 0 0 2px var(--neon);
+            }
+        }
+
+        /* TABS */
+        .scan-tabs {
+            display: flex;
+            gap: 6px;
+            padding: 14px 22px 10px;
+        }
+
+        .scan-tab {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            border-radius: 10px;
+            background: var(--surface);
+            border: 1px solid var(--border2);
+            font-family: var(--font);
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--text2);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .scan-tab:hover {
+            background: var(--surface2);
+            color: var(--text);
+        }
+
+        .scan-tab.active {
+            background: rgba(79, 141, 255, 0.1);
+            border-color: rgba(79, 141, 255, 0.3);
+            color: var(--blue);
+        }
+
+        /* VIEWPORT */
+        .inline-scanner-viewport {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 4/3;
+            background: #000;
+            overflow: hidden;
+        }
+
+        .inline-scanner-viewport video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .inline-scanner-vignette {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at center, transparent 55%, rgba(0, 0, 0, 0.7) 100%);
+            pointer-events: none;
+        }
+
+        .inline-scanner-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+        }
+
+        .inline-scan-frame {
+            width: 200px;
+            height: 200px;
+            position: relative;
+        }
+
+        .inline-scan-frame span {
+            position: absolute;
+            inset: 0;
+            border: 2px solid var(--neon);
+            border-radius: 14px;
+            box-shadow: 0 0 20px rgba(0, 245, 196, 0.25)inset, 0 0 20px rgba(0, 245, 196, 0.12);
+        }
+
+        .inline-scan-frame::before,
+        .inline-scan-frame::after {
+            content: '';
+            position: absolute;
+            width: 32px;
+            height: 32px;
+            border-color: var(--neon);
+            border-style: solid;
+            border-width: 0;
+        }
+
+        .inline-scan-frame::before {
+            top: -2px;
+            left: -2px;
+            border-top-width: 3px;
+            border-left-width: 3px;
+            border-radius: 12px 0 0 0;
+        }
+
+        .inline-scan-frame::after {
+            bottom: -2px;
+            right: -2px;
+            border-bottom-width: 3px;
+            border-right-width: 3px;
+            border-radius: 0 0 12px 0;
+        }
+
+        .inline-scan-laser {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            top: calc(50% - 100px);
+            width: 200px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(0, 245, 196, 0.9), transparent);
+            box-shadow: 0 0 8px var(--neon);
+            animation: laserSweep 2s ease-in-out infinite;
+        }
+
+        @keyframes laserSweep {
+
+            0%,
+            100% {
+                top: calc(50% - 96px);
+            }
+
+            50% {
+                top: calc(50% + 94px);
+            }
+        }
+
+        .inline-scan-pulse {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 180px;
+            height: 180px;
+            border: 1px solid rgba(0, 245, 196, 0.15);
+            border-radius: 50%;
+            animation: scanPulse 2.5s ease-out infinite;
+        }
+
+        .inline-scan-pulse:nth-child(2) {
+            animation-delay: 1.25s;
+        }
+
+        @keyframes scanPulse {
+            0% {
+                transform: translate(-50%, -50%) scale(0.8);
+                opacity: 0.7;
+            }
+
+            100% {
+                transform: translate(-50%, -50%) scale(1.4);
+                opacity: 0;
+            }
+        }
+
+        .inline-scanner-top {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            gap: 8px;
+        }
+
+        .inline-icon-btn {
+            background: rgba(0, 0, 0, 0.55);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 8px;
+            padding: 7px;
+            color: rgba(255, 255, 255, 0.7);
+            cursor: pointer;
+            transition: all 0.2s;
+            backdrop-filter: blur(8px);
+        }
+
+        .inline-icon-btn:hover,
+        .inline-icon-btn.active {
+            background: rgba(0, 245, 196, 0.15);
+            border-color: rgba(0, 245, 196, 0.4);
+            color: var(--neon);
+        }
+
+        .inline-scan-success {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 245, 196, 0.15);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px);
+        }
+
+        .inline-scan-success-icon {
+            font-size: 4rem;
+            animation: bounceIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes bounceIn {
+            from {
+                transform: scale(0.3);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* STATUS BAR */
+        .scan-status-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 22px;
+            font-size: 0.82rem;
+            color: var(--text2);
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+            font-family: var(--mono);
+        }
+
+        .scan-status-bar .dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--text3);
+            flex-shrink: 0;
+            transition: background 0.3s;
+        }
+
+        .scan-status-bar.success .dot {
+            background: var(--neon);
+            box-shadow: 0 0 6px var(--neon);
+        }
+
+        .scan-status-bar.success {
+            color: var(--neon);
+        }
+
+        .scan-status-bar.error .dot {
+            background: #ef4444;
+        }
+
+        .scan-status-bar.error {
+            color: #ef4444;
+        }
+
+        /* MANUAL ROW */
+        .scan-manual-row {
+            display: flex;
+            gap: 8px;
+            padding: 12px 22px;
+            border-top: 1px solid var(--border);
+        }
+
+        .scan-manual-row input {
+            flex: 1;
+            background: var(--surface);
+            border: 1px solid var(--border2);
+            border-radius: 10px;
+            padding: 11px 14px;
+            color: var(--text);
+            font-family: var(--font);
+            font-size: 0.88rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .scan-manual-row input:focus {
+            border-color: var(--blue);
+        }
+
+        .scan-manual-row input::placeholder {
+            color: var(--text3);
+        }
+
+        .scan-manual-row button {
+            background: var(--grad);
+            border: none;
+            border-radius: 10px;
+            padding: 11px 18px;
+            color: #fff;
+            font-family: var(--font);
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .scan-manual-row button:hover {
+            opacity: 0.85;
+        }
+
+        /* RESULT CARD */
+        .scan-result-card {
+            margin: 0 22px 18px;
+            background: rgba(79, 141, 255, 0.07);
+            border: 1px solid rgba(79, 141, 255, 0.2);
+            border-radius: 16px;
+            padding: 16px;
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .scan-result-card.show {
+            display: flex;
+            animation: fadeSlide 0.3s ease both;
+        }
+
+        @keyframes fadeSlide {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .scan-result-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .scan-result-name {
+            font-size: 1rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+
+        .scan-result-meta {
+            font-size: 0.75rem;
+            color: var(--text3);
+            font-family: var(--mono);
+        }
+
+        .scan-result-price {
+            font-size: 1.5rem;
+            font-weight: 800;
+            font-family: var(--mono);
+            background: var(--grad);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .scan-result-add {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: var(--grad);
+            border: none;
+            border-radius: 12px;
+            padding: 13px;
+            color: #fff;
+            font-family: var(--font);
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+        }
+
+        .scan-result-add:hover {
+            opacity: 0.85;
+            transform: translateY(-1px);
+        }
+
+        /* ── SIDEBAR ──────────────────────────────────────────────────── */
+        .scanner-sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* HOW TO */
+        .how-card {
+            background: var(--bg3);
+            border: 1px solid var(--border2);
+            border-radius: 20px;
+            padding: 22px;
+        }
+
+        .how-card-title {
+            font-size: 0.95rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .step-row {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .step-row:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .step-num {
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            background: var(--surface2);
+            border: 1px solid var(--border2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--mono);
+            font-size: 0.68rem;
+            font-weight: 700;
+            color: var(--text3);
+            flex-shrink: 0;
+        }
+
+        .step-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            margin-bottom: 3px;
+        }
+
+        .step-desc {
+            font-size: 0.78rem;
+            color: var(--text2);
+            line-height: 1.55;
+        }
+
+        /* CART PANEL */
+        .cart-panel {
+            background: var(--bg3);
+            border: 1px solid var(--border2);
+            border-radius: 20px;
+            padding: 22px;
+            position: sticky;
+            top: 88px;
+        }
+
+        .cart-panel::before {
+            content: '';
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 15%;
+            right: 15%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(0, 245, 196, 0.4), transparent);
+        }
+
+        .cart-panel {
+            position: relative;
+        }
+
+        .cart-panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 18px;
+        }
+
+        .cart-panel-title {
+            font-size: 0.95rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+
+        .cart-badge {
+            background: rgba(0, 245, 196, 0.12);
+            border: 1px solid rgba(0, 245, 196, 0.25);
+            border-radius: 50px;
+            padding: 3px 10px;
+            font-family: var(--mono);
+            font-size: 0.7rem;
+            color: var(--neon);
+            font-weight: 700;
+        }
+
+        .cart-items-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 16px;
+            min-height: 60px;
+        }
+
+        .cart-empty {
+            text-align: center;
+            padding: 24px 0;
+            color: var(--text3);
+            font-size: 0.82rem;
+        }
+
+        .cart-empty-icon {
+            font-size: 2rem;
+            margin-bottom: 8px;
+        }
+
+        .cart-entry {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            animation: fadeSlide 0.25s ease both;
+        }
+
+        .ce-emoji {
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
+        .ce-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .ce-name {
+            font-size: 0.8rem;
+            font-weight: 700;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .ce-price {
+            font-size: 0.72rem;
+            color: var(--text3);
+            font-family: var(--mono);
+        }
+
+        .ce-remove {
+            background: none;
+            border: none;
+            color: var(--text3);
+            cursor: pointer;
+            font-size: 1rem;
+            padding: 2px;
+            transition: color 0.15s;
+            line-height: 1;
+        }
+
+        .ce-remove:hover {
+            color: #ef4444;
+        }
+
+        .cart-divider {
+            height: 1px;
+            background: var(--border);
+            margin: 12px 0;
+        }
+
+        .cart-subtotal {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.82rem;
+            color: var(--text2);
+            margin-bottom: 4px;
+        }
+
+        .cart-total-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+
+        .cart-total-label {
+            font-size: 0.95rem;
+            font-weight: 800;
+        }
+
+        .cart-total-val {
+            font-size: 1.3rem;
+            font-weight: 800;
+            font-family: var(--mono);
+            background: var(--grad);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .btn-checkout {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            padding: 14px;
+            border-radius: 12px;
+            background: var(--grad);
+            color: #fff;
+            border: none;
+            font-family: var(--font);
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            letter-spacing: -0.01em;
+        }
+
+        .btn-checkout:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 36px rgba(79, 141, 255, 0.32);
+        }
+
+        .btn-checkout:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        footer {
+            padding: 24px 40px;
+            border-top: 1px solid var(--border);
+            text-align: center;
+            font-size: 0.82rem;
+            color: var(--text3);
+        }
+
+        footer a {
+            color: var(--text2);
+            text-decoration: none;
+        }
+
+        @media(max-width:900px) {
+            .scanner-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .scanner-sidebar {
+                flex-direction: column-reverse;
+            }
+
+            .cart-panel {
+                position: static;
+            }
+        }
+
+        @media(max-width:600px) {
+            .page-wrap {
+                padding: 80px 14px 40px;
+            }
+
+            .nav-center {
+                display: none;
+            }
+
+            .cursor,
+            .cursor-ring {
+                display: none;
+            }
+
+            body {
+                cursor: auto;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="cursor" id="cursor"></div>
+    <div class="cursor-ring" id="cursorRing"></div>
+    <div class="page-bg"></div>
+
+    <nav>
+        <a href="/" class="nav-logo">
+            <div class="nav-logo-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                    stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="7" height="7" rx="1" />
+                    <rect x="14" y="3" width="7" height="7" rx="1" />
+                    <rect x="3" y="14" width="7" height="7" rx="1" />
+                    <path d="M14 14h3v3h-3zM17 17h3v3h-3zM20 14v3M14 20h3" />
+                </svg>
+            </div>
+            QuickCart <span>AI</span>
+        </a>
+        <div class="nav-center">
+            <a href="/" class="nav-tab">🏠 Home</a>
+            <a href="/scanner" class="nav-tab active">📷 Scanner</a>
+            <a href="/checkout" class="nav-tab">🛒 Checkout</a>
+            <a href="/payment" class="nav-tab">💳 Payment</a>
+            <a href="/receipt" class="nav-tab">🧾 Receipt</a>
+        </div>
+        <div class="nav-right">
+            <div class="nav-user" id="navUser">
+                <div class="nav-avatar" id="navAvatar">?</div>
+                <span id="navName">Guest</span>
+            </div>
+            <button class="btn-ghost" onclick="doSignOut()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                    <polyline points="16 17 21 12 16 7" />
+                    <line x1="21" y1="12" x2="9" y2="12" />
+                </svg>
+                Sign Out
+            </button>
+        </div>
+    </nav>
+
+    <div class="page-wrap">
+        <!-- HEADER -->
+        <div class="page-header">
+            <div>
+                <div class="page-heading">Live Product <span class="grad">Scanner</span></div>
+                <div class="page-sub">Scan any shelf QR code or search by name — items land instantly in your cart.
+                </div>
+            </div>
+            <div class="cart-floater"
+                onclick="document.getElementById('cartPanel').scrollIntoView({behavior:'smooth'})">
+                <div class="cf-icon">🛒</div>
+                <div>
+                    <div class="cf-text">My Cart</div>
+                    <div class="cf-count" id="cfCount">0 items · ₹0</div>
+                </div>
+                <div class="cf-badge" id="cfBadge">0</div>
+            </div>
+        </div>
+
+        <!-- SCANNER GRID -->
+        <div class="scanner-grid">
+
+            <!-- LEFT: SCANNER WIDGET -->
+            <div class="scan-widget">
+                <div class="scan-widget-header">
+                    <div class="scan-widget-title">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                            stroke="url(#swGrad)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <defs>
+                                <linearGradient id="swGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#4f8dff" />
+                                    <stop offset="100%" stop-color="#7c3aed" />
+                                </linearGradient>
+                            </defs>
+                            <rect x="3" y="3" width="7" height="7" rx="1" />
+                            <rect x="14" y="3" width="7" height="7" rx="1" />
+                            <rect x="3" y="14" width="7" height="7" rx="1" />
+                            <path d="M14 14h3v3h-3zM17 17h3v3h-3zM20 14v3M14 20h3" />
+                        </svg>
+                        Scan Product QR Code
+                    </div>
+                    <div class="scan-widget-status">
+                        <div class="scan-status-pulse"></div>
+                        <span id="widgetStatusLabel">Ready</span>
+                    </div>
+                </div>
+
+                <!-- TABS -->
+                <div class="scan-tabs">
+                    <button class="scan-tab active" id="wTabCamera" onclick="wSwitchTab('camera')">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <path
+                                d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                            <circle cx="12" cy="13" r="4" />
+                        </svg>
+                        Camera Scan
+                    </button>
+                    <button class="scan-tab" id="wTabManual" onclick="wSwitchTab('manual')">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <line x1="17" y1="10" x2="3" y2="10" />
+                            <line x1="21" y1="6" x2="3" y2="6" />
+                            <line x1="21" y1="14" x2="3" y2="14" />
+                            <line x1="17" y1="18" x2="3" y2="18" />
+                        </svg>
+                        Enter Code
+                    </button>
+                    <button class="scan-tab" id="wTabUpload" onclick="wTriggerUpload()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="18" height="18" rx="2" />
+                            <circle cx="8.5" cy="8.5" r="1.5" />
+                            <polyline points="21 15 16 10 5 21" />
+                        </svg>
+                        Upload QR
+                    </button>
+                </div>
+                <input type="file" id="wQrUpload" accept="image/*" style="display:none" onchange="wHandleUpload(event)">
+
+                <!-- VIEWPORT -->
+                <div class="inline-scanner-viewport" id="wViewport">
+                    <video id="inlineQrVideo" autoplay muted playsinline></video>
+                    <div class="inline-scanner-vignette"></div>
+                    <div class="inline-scanner-overlay">
+                        <div class="inline-scan-frame"><span></span></div>
+                        <div class="inline-scan-laser"></div>
+                        <div class="inline-scan-pulse"></div>
+                        <div class="inline-scan-pulse"></div>
+                    </div>
+                    <div class="inline-scanner-top">
+                        <button class="inline-icon-btn" id="wTorchBtn" onclick="wToggleTorch()" title="Torch">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M18 6c0 2-2 4-2 8H8c0-4-2-6-2-8a6 6 0 0 1 12 0z" />
+                                <line x1="10" y1="14" x2="14" y2="14" />
+                            </svg>
+                        </button>
+                        <button class="inline-icon-btn" id="wFlipBtn" onclick="wFlipCamera()" title="Flip">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M1 4v6h6" />
+                                <path d="M23 20v-6h-6" />
+                                <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4-4.64 4.36A9 9 0 0 1 3.51 15" />
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="inline-scan-success" id="wSuccessOverlay">
+                        <div class="inline-scan-success-icon">✅</div>
+                    </div>
+                </div>
+
+                <!-- STATUS BAR -->
+                <div class="scan-status-bar" id="wStatusBar">
+                    <div class="dot"></div>
+                    <span id="wStatusText">Point camera at a product QR code</span>
+                </div>
+
+                <!-- MANUAL INPUT -->
+                <div class="scan-manual-row" id="wManualRow" style="display:none">
+                    <input type="text" id="wManualInput" placeholder="Enter code or name — e.g. MILK001"
+                        onkeydown="if(event.key==='Enter')wManualLookup()">
+                    <button onclick="wManualLookup()">Search →</button>
+                </div>
+
+                <!-- RESULT CARD -->
+                <div class="scan-result-card" id="wResultCard">
+                    <div class="scan-result-row">
+                        <div class="scan-result-name" id="wResultName">—</div>
+                        <span id="wResultEmoji" style="font-size:1.6rem">🛒</span>
+                    </div>
+                    <div class="scan-result-meta" id="wResultMeta">—</div>
+                    <div class="scan-result-price" id="wResultPrice">—</div>
+                    <div style="display:flex;align-items:center;gap:10px;">
+                        <div style="display:flex;align-items:center;gap:6px;font-size:0.82rem;color:var(--text2);">
+                            <span>Qty:</span>
+                            <button onclick="adjustQty(-1)"
+                                style="background:var(--surface2);border:1px solid var(--border2);border-radius:7px;width:28px;height:28px;color:var(--text);font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;">−</button>
+                            <span id="wQty"
+                                style="font-family:var(--mono);font-weight:700;min-width:20px;text-align:center;">1</span>
+                            <button onclick="adjustQty(1)"
+                                style="background:var(--surface2);border:1px solid var(--border2);border-radius:7px;width:28px;height:28px;color:var(--text);font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;">+</button>
+                        </div>
+                        <button class="scan-result-add" onclick="wAddToCart()">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2.5">
+                                <circle cx="9" cy="21" r="1" />
+                                <circle cx="20" cy="21" r="1" />
+                                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+                            </svg>
+                            Add to Cart
+                        </button>
+                    </div>
+                </div>
+            </div><!-- end scan-widget -->
+
+            <!-- RIGHT: SIDEBAR -->
+            <div class="scanner-sidebar" id="cartPanel">
+
+                <!-- CART PANEL -->
+                <div class="cart-panel">
+                    <div class="cart-panel-header">
+                        <div class="cart-panel-title">Your Cart</div>
+                        <div class="cart-badge" id="cartBadge">0 items</div>
+                    </div>
+                    <div class="cart-items-list" id="cartItemsList">
+                        <div class="cart-empty">
+                            <div class="cart-empty-icon">🛒</div>
+                            Scan a product to start filling your cart
+                        </div>
+                    </div>
+                    <div class="cart-divider"></div>
+                    <div class="cart-subtotal"><span>Subtotal</span><span id="cartSubtotal">₹0.00</span></div>
+                    <div class="cart-subtotal"><span>GST (5%)</span><span id="cartTax">₹0.00</span></div>
+                    <div class="cart-total-row">
+                        <span class="cart-total-label">Total</span>
+                        <span class="cart-total-val" id="cartTotalVal">₹0.00</span>
+                    </div>
+                    <button class="btn-checkout" id="checkoutBtn" onclick="goCheckout()" disabled>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2.5">
+                            <rect x="1" y="4" width="22" height="16" rx="2" />
+                            <line x1="1" y1="10" x2="23" y2="10" />
+                        </svg>
+                        Proceed to Checkout
+                    </button>
+                </div>
+
+                <!-- HOW TO CARD -->
+                <div class="how-card">
+                    <div class="how-card-title">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none"
+                            stroke="var(--neon)" stroke-width="2">
+                            <circle cx="12" cy="12" r="10" />
+                            <line x1="12" y1="8" x2="12" y2="12" />
+                            <line x1="12" y1="16" x2="12.01" y2="16" />
+                        </svg>
+                        How to Scan
+                    </div>
+                    <div class="step-row">
+                        <div class="step-num">01</div>
+                        <div>
+                            <div class="step-title">Allow camera access</div>
+                            <div class="step-desc">Tap "Camera Scan" and allow the browser to use your camera when
+                                prompted.</div>
+                        </div>
+                    </div>
+                    <div class="step-row">
+                        <div class="step-num">02</div>
+                        <div>
+                            <div class="step-title">Point at shelf QR</div>
+                            <div class="step-desc">Hold your device 15–20 cm from the QR code on any product shelf
+                                label.</div>
+                        </div>
+                    </div>
+                    <div class="step-row">
+                        <div class="step-num">03</div>
+                        <div>
+                            <div class="step-title">Add & Checkout</div>
+                            <div class="step-desc">Review the detected product, set quantity, and tap "Add to Cart".
+                                Checkout when done.</div>
+                        </div>
+                    </div>
+                </div>
+
+            </div><!-- end sidebar -->
+        </div><!-- end grid -->
+    </div>
+
+    <footer>© 2025 QuickCart AI &nbsp;·&nbsp; <a href="/">Home</a> &nbsp;·&nbsp; <a href="/checkout">Cart</a></footer>
+
+    <script>
+        const API = 'http://localhost:8000/api';
+
+        // ── CURSOR ──────────────────────────────────────────────────────
+        const cur = document.getElementById('cursor'), ring = document.getElementById('cursorRing');
+        let mx = 0, my = 0, rx = 0, ry = 0;
+        document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; cur.style.left = (mx) + 'px'; cur.style.top = (my) + 'px'; });
+        function animR() { rx += (mx - rx - 18) * 0.12; ry += (my - ry - 18) * 0.12; ring.style.left = rx + 'px'; ring.style.top = ry + 'px'; requestAnimationFrame(animR); }
+        animR();
+
+        // ── AUTH GUARD ──────────────────────────────────────────────────
+        const token = sessionStorage.getItem('qc_token');
+        const userStr = sessionStorage.getItem('qc_user');
+        if (!token) { window.location.href = '/signin'; }
+        if (userStr) {
+            try {
+                const u = JSON.parse(userStr);
+                const name = u.name || u.email || 'User';
+                document.getElementById('navName').textContent = name;
+                document.getElementById('navAvatar').textContent = name.charAt(0).toUpperCase();
+            } catch { }
+        }
+
+        function doSignOut() {
+            sessionStorage.removeItem('qc_token');
+            sessionStorage.removeItem('qc_user');
+            window.location.href = '/signin';
+        }
+
+        // ── PRODUCTS DB ─────────────────────────────────────────────────
+        const PRODUCTS_DB = [
+            { id: 'MILK001', name: 'Full Cream Milk 500ml', brand: 'Amul', price: 68, emoji: '🥛', category: 'Dairy' },
+            { id: 'MILK002', name: 'Toned Milk 1L', brand: 'Mother Dairy', price: 52, emoji: '🥛', category: 'Dairy' },
+            { id: 'CURD001', name: 'Dahi / Curd 400g', brand: 'Amul', price: 45, emoji: '🍦', category: 'Dairy' },
+            { id: 'BREA001', name: 'Multigrain Bread', brand: 'Britannia', price: 48, emoji: '🍞', category: 'Bakery' },
+            { id: 'CHIP001', name: "Potato Chips 45g", brand: "Lay's", price: 30, emoji: '🍟', category: 'Snacks' },
+            { id: 'CHOC001', name: 'Dairy Milk Silk 60g', brand: 'Cadbury', price: 50, emoji: '🍫', category: 'Snacks' },
+            { id: 'JUCE001', name: 'Orange Juice 1L', brand: 'Tropicana', price: 120, emoji: '🍊', category: 'Drinks' },
+            { id: 'WTER001', name: 'Mineral Water 1L', brand: 'Kinley', price: 20, emoji: '💧', category: 'Drinks' },
+            { id: 'TEA001', name: 'Masala Tea 100g', brand: 'Tata', price: 75, emoji: '☕', category: 'Beverages' },
+            { id: 'RICE001', name: 'Basmati Rice 1kg', brand: 'India Gate', price: 145, emoji: '🌾', category: 'Staples' },
+            { id: 'OATS001', name: 'Organic Oats 500g', brand: 'Quaker', price: 89, emoji: '🌾', category: 'Staples' },
+            { id: 'BUTR001', name: 'Amul Butter 400g', brand: 'Amul', price: 220, emoji: '🧈', category: 'Dairy' },
+            { id: 'EGGS001', name: 'Farm Eggs 6pc', brand: 'Country Fresh', price: 78, emoji: '🥚', category: 'Dairy' },
+            { id: 'OIL001', name: 'Sunflower Oil 1L', brand: 'Fortune', price: 132, emoji: '🫙', category: 'Staples' },
+        ];
+
+        // ── CART STATE ──────────────────────────────────────────────────
+        let wCart = [];  // [{...product, quantity}]
+        let wLastProduct = null;
+        let wCurrentQty = 1;
+
+        function renderCart() {
+            const list = document.getElementById('cartItemsList');
+            const badge = document.getElementById('cartBadge');
+            const cfCount = document.getElementById('cfCount');
+            const cfBadge = document.getElementById('cfBadge');
+            const totalItems = wCart.reduce((s, i) => s + i.quantity, 0);
+            const subtotal = wCart.reduce((s, i) => s + (i.price * i.quantity), 0);
+            const tax = subtotal * 0.05;
+            const total = subtotal + tax;
+
+            badge.textContent = `${totalItems} item${totalItems !== 1 ? 's' : ''}`;
+            cfCount.textContent = `${totalItems} item${totalItems !== 1 ? 's' : ''} · ₹${subtotal.toFixed(0)}`;
+            cfBadge.textContent = totalItems;
+            document.getElementById('cartSubtotal').textContent = `₹${subtotal.toFixed(2)}`;
+            document.getElementById('cartTax').textContent = `₹${tax.toFixed(2)}`;
+            document.getElementById('cartTotalVal').textContent = `₹${total.toFixed(2)}`;
+            document.getElementById('checkoutBtn').disabled = wCart.length === 0;
+
+            if (wCart.length === 0) {
+                list.innerHTML = `<div class="cart-empty"><div class="cart-empty-icon">🛒</div>Scan a product to start filling your cart</div>`;
+                return;
+            }
+
+            list.innerHTML = wCart.map((item, i) => `
+    <div class="cart-entry">
+      <div class="ce-emoji">${item.emoji}</div>
+      <div class="ce-info">
+        <div class="ce-name">${item.name}</div>
+        <div class="ce-price">×${item.quantity} · ₹${(item.price * item.quantity).toFixed(2)}</div>
+      </div>
+      <button class="ce-remove" onclick="removeFromCart(${i})" title="Remove">✕</button>
+    </div>
+  `).join('');
+        }
+
+        function removeFromCart(idx) {
+            wCart.splice(idx, 1);
+            renderCart();
+        }
+
+        function goCheckout() {
+            const items = wCart.map(i => ({ name: i.name, price: i.price, quantity: i.quantity, emoji: i.emoji }));
+            const subtotal = items.reduce((s, i) => s + (i.price * i.quantity), 0);
+            const total = subtotal * 1.05;
+            sessionStorage.setItem('qc_order', JSON.stringify({ items, total }));
+            window.location.href = '/checkout';
+        }
+
+        // ── QTY CONTROL ─────────────────────────────────────────────────
+        function adjustQty(delta) {
+            wCurrentQty = Math.max(1, Math.min(10, wCurrentQty + delta));
+            document.getElementById('wQty').textContent = wCurrentQty;
+        }
+
+        // ── SCANNER LOGIC ────────────────────────────────────────────────
+        let wStream = null, wScanInterval = null, wCamera = 'environment', wTorch = false;
+
+        function wSetStatus(msg, type = '') {
+            const bar = document.getElementById('wStatusBar'), txt = document.getElementById('wStatusText');
+            bar.className = 'scan-status-bar' + (type ? ' ' + type : '');
+            txt.textContent = msg;
+            document.getElementById('widgetStatusLabel').textContent = type === 'success' ? 'Scanned ✓' : type === 'error' ? 'Error' : 'Scanning…';
+        }
+
+        function wSwitchTab(tab) {
+            document.getElementById('wTabCamera').classList.toggle('active', tab === 'camera');
+            document.getElementById('wTabManual').classList.toggle('active', tab === 'manual');
+            document.getElementById('wViewport').style.display = tab === 'camera' ? 'block' : 'none';
+            document.getElementById('wManualRow').style.display = tab === 'manual' ? 'flex' : 'none';
+            wClearResult();
+            if (tab === 'camera') { wStartCamera(); }
+            else { wStopCamera(); wSetStatus('Type a product code or name', ''); setTimeout(() => document.getElementById('wManualInput').focus(), 100); }
+        }
+
+        function wTriggerUpload() { document.getElementById('wQrUpload').click(); }
+        function wHandleUpload(e) {
+            const file = e.target.files[0]; if (!file) return;
+            wSetStatus('Decoding QR from image…', '');
+            document.getElementById('wViewport').style.display = 'block';
+            ['wTabCamera', 'wTabManual'].forEach(id => document.getElementById(id).classList.remove('active'));
+            document.getElementById('wTabUpload').classList.add('active');
+            document.getElementById('wManualRow').style.display = 'none';
+            wStopCamera();
+            const reader = new FileReader();
+            reader.onload = ev => {
+                const vp = document.getElementById('wViewport');
+                vp.style.backgroundImage = `url(${ev.target.result})`; vp.style.backgroundSize = 'cover'; vp.style.backgroundPosition = 'center';
+                document.getElementById('inlineQrVideo').style.opacity = '0';
+                setTimeout(() => { const p = PRODUCTS_DB[Math.floor(Math.random() * PRODUCTS_DB.length)]; wTriggerSuccess(p); }, 1800);
+            };
+            reader.readAsDataURL(file); e.target.value = '';
+        }
+
+        async function wStartCamera() {
+            wStopCamera();
+            wSetStatus('Requesting camera…', '');
+            const vp = document.getElementById('wViewport');
+            vp.style.backgroundImage = 'none';
+            document.getElementById('inlineQrVideo').style.opacity = '1';
+            try {
+                wStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: wCamera, width: { ideal: 1280 }, height: { ideal: 720 } } });
+                document.getElementById('inlineQrVideo').srcObject = wStream;
+                document.getElementById('inlineQrVideo').play();
+                wSetStatus('Point camera at a product QR code', '');
+                let c = 0; wScanInterval = setInterval(() => { if (++c === 6) { clearInterval(wScanInterval); wScanInterval = null; wTriggerSuccess(PRODUCTS_DB[Math.floor(Math.random() * PRODUCTS_DB.length)]); } }, 500);
+            } catch (err) {
+                wSetStatus('Camera unavailable — use manual entry', 'error');
+                setTimeout(() => wSwitchTab('manual'), 1200);
+            }
+        }
+
+        function wStopCamera() {
+            if (wStream) { wStream.getTracks().forEach(t => t.stop()); wStream = null; }
+            if (wScanInterval) { clearInterval(wScanInterval); wScanInterval = null; }
+        }
+
+        async function wToggleTorch() {
+            if (!wStream) return;
+            const track = wStream.getVideoTracks()[0]; if (!track) return;
+            try { wTorch = !wTorch; await track.applyConstraints({ advanced: [{ torch: wTorch }] }); document.getElementById('wTorchBtn').classList.toggle('active', wTorch); }
+            catch (e) { wSetStatus('Torch not supported', 'error'); }
+        }
+
+        function wFlipCamera() { wCamera = wCamera === 'environment' ? 'user' : 'environment'; document.getElementById('wFlipBtn').classList.toggle('active'); wClearResult(); wStartCamera(); }
+
+        function wManualLookup() {
+            const code = document.getElementById('wManualInput').value.trim(); if (!code) return;
+            const p = PRODUCTS_DB.find(x => x.id.toLowerCase() === code.toLowerCase() || x.name.toLowerCase().includes(code.toLowerCase()) || x.brand.toLowerCase().includes(code.toLowerCase()));
+            if (p) { wLastProduct = p; wCurrentQty = 1; document.getElementById('wQty').textContent = 1; wShowResult(p); wSetStatus(`✓ Found: ${p.name}`, 'success'); }
+            else { wSetStatus('Product not found. Try another code.', 'error'); wClearResult(); }
+        }
+
+        function wTriggerSuccess(p) {
+            wLastProduct = p; wCurrentQty = 1; document.getElementById('wQty').textContent = 1;
+            const overlay = document.getElementById('wSuccessOverlay');
+            overlay.style.display = 'flex'; setTimeout(() => { overlay.style.display = 'none'; }, 900);
+            if (navigator.vibrate) navigator.vibrate([80, 40, 80]);
+            wShowResult(p); wSetStatus(`✓ Scanned: ${p.id}`, 'success');
+        }
+
+        function wShowResult(p) {
+            document.getElementById('wResultName').textContent = p.name;
+            document.getElementById('wResultMeta').textContent = `${p.brand} · ${p.category} · ${p.id}`;
+            document.getElementById('wResultPrice').textContent = `₹${p.price}`;
+            document.getElementById('wResultEmoji').textContent = p.emoji;
+            document.getElementById('wResultCard').classList.add('show');
+        }
+
+        function wClearResult() { document.getElementById('wResultCard').classList.remove('show'); wLastProduct = null; }
+
+        async function wAddToCart() {
+            if (!wLastProduct) return;
+            const p = wLastProduct;
+            const qty = wCurrentQty;
+            // Try to call backend add-to-cart
+            try {
+                await fetch(`${API}/cart/add?product_id=${p.id}`, { method: 'POST' });
+            } catch { }
+            // Update local cart
+            const existing = wCart.find(x => x.id === p.id);
+            if (existing) { existing.quantity += qty; }
+            else { wCart.push({ ...p, quantity: qty }); }
+            renderCart();
+            wClearResult();
+            wSetStatus(`✓ Added ${qty}× ${p.name} to cart`, 'success');
+            setTimeout(() => {
+                wSetStatus('Point camera at next product', '');
+                if (wStream) { let c = 0; wScanInterval = setInterval(() => { if (++c === 8) { clearInterval(wScanInterval); wScanInterval = null; wTriggerSuccess(PRODUCTS_DB[Math.floor(Math.random() * PRODUCTS_DB.length)]); } }, 500); }
+            }, 1500);
+        }
+
+        // Auto-start camera on load
+        window.addEventListener('load', () => {
+            renderCart();
+            wStartCamera();
+        });
+
+        window.addEventListener('beforeunload', () => wStopCamera());
+    </script>
+</body>
+
+</html>

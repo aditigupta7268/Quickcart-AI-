@@ -1,0 +1,1075 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Receipt — QuickCart AI</title>
+    <link rel="icon" type="image/svg+xml"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><defs><linearGradient id='a' x1='0' y1='0' x2='1' y2='1'><stop offset='0%25' stop-color='%234f8dff'/><stop offset='100%25' stop-color='%237c3aed'/></linearGradient></defs><rect width='32' height='32' rx='7' fill='url(%23a)'/></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --bg: #0B0B0F;
+            --bg2: #0f0f15;
+            --bg3: #13131c;
+            --surface: rgba(255, 255, 255, 0.04);
+            --surface2: rgba(255, 255, 255, 0.07);
+            --border: rgba(255, 255, 255, 0.08);
+            --border2: rgba(255, 255, 255, 0.14);
+            --text: #f0f0f8;
+            --text2: #8b8ba0;
+            --text3: #5a5a72;
+            --blue: #4f8dff;
+            --violet: #7c3aed;
+            --neon: #00f5c4;
+            --grad: linear-gradient(135deg, #4f8dff 0%, #7c3aed 100%);
+            --font: 'Bricolage Grotesque', sans-serif;
+            --mono: 'JetBrains Mono', monospace;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: var(--font);
+            background: var(--bg);
+            color: var(--text);
+            overflow-x: hidden;
+            min-height: 100vh;
+            cursor: none;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .cursor {
+            position: fixed;
+            width: 12px;
+            height: 12px;
+            background: var(--neon);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            transform: translate(-50%, -50%);
+            mix-blend-mode: screen;
+        }
+
+        .cursor-ring {
+            position: fixed;
+            width: 36px;
+            height: 36px;
+            border: 1.5px solid rgba(0, 245, 196, 0.4);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9998;
+            transform: translate(-50%, -50%);
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 9997;
+            opacity: 0.5;
+        }
+
+        ::-webkit-scrollbar {
+            width: 3px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--violet);
+            border-radius: 2px;
+        }
+
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            padding: 0 40px;
+            height: 68px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border);
+            background: rgba(11, 11, 15, 0.85);
+            backdrop-filter: blur(20px);
+        }
+
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.2rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            text-decoration: none;
+            color: var(--text);
+        }
+
+        .nav-logo-icon {
+            width: 32px;
+            height: 32px;
+            background: var(--grad);
+            border-radius: 9px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .nav-logo span {
+            color: var(--text2);
+            font-weight: 400;
+        }
+
+        .nav-center {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .nav-tab {
+            padding: 7px 14px;
+            border-radius: 8px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: var(--text2);
+            text-decoration: none;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .nav-tab:hover {
+            background: var(--surface2);
+            color: var(--text);
+        }
+
+        .nav-tab.active {
+            background: rgba(0, 245, 196, 0.10);
+            color: var(--neon);
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .nav-user {
+            font-size: 0.85rem;
+            color: var(--text2);
+            font-weight: 500;
+        }
+
+        .nav-user strong {
+            color: var(--text);
+        }
+
+        .btn-ghost {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 9px 18px;
+            border-radius: 10px;
+            font-family: var(--font);
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            background: transparent;
+            color: var(--text2);
+            border: 1px solid var(--border2);
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .btn-ghost:hover {
+            background: var(--surface2);
+            color: var(--text);
+        }
+
+        /* PAGE LAYOUT */
+        .page-bg {
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(ellipse 70% 60% at 50% 30%, rgba(0, 245, 196, 0.05) 0%, transparent 60%), radial-gradient(ellipse 50% 40% at 80% 80%, rgba(124, 58, 237, 0.04) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        .page-wrap {
+            flex: 1;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding: 100px 24px 60px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* SUCCESS ANIMATION */
+        .success-area {
+            text-align: center;
+            margin-bottom: 36px;
+        }
+
+        .success-ring {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: rgba(0, 245, 196, 0.08);
+            border: 2px solid rgba(0, 245, 196, 0.35);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 22px;
+            position: relative;
+        }
+
+        .success-ring::before {
+            content: '';
+            position: absolute;
+            inset: -8px;
+            border-radius: 50%;
+            border: 1px solid rgba(0, 245, 196, 0.15);
+            animation: pulseRing 2s ease-out infinite;
+        }
+
+        .success-ring::after {
+            content: '';
+            position: absolute;
+            inset: -16px;
+            border-radius: 50%;
+            border: 1px solid rgba(0, 245, 196, 0.07);
+            animation: pulseRing 2s 0.5s ease-out infinite;
+        }
+
+        @keyframes pulseRing {
+            0% {
+                transform: scale(1);
+                opacity: 1
+            }
+
+            100% {
+                transform: scale(1.15);
+                opacity: 0
+            }
+        }
+
+        .success-check {
+            animation: popIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s both;
+        }
+
+        @keyframes popIn {
+            from {
+                transform: scale(0.2);
+                opacity: 0
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1
+            }
+        }
+
+        .success-title {
+            font-size: 2rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            margin-bottom: 8px;
+            animation: fadeUp 0.5s 0.3s ease both;
+        }
+
+        .success-sub {
+            font-size: 1rem;
+            color: var(--text2);
+            animation: fadeUp 0.5s 0.4s ease both;
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(14px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .grad-text {
+            background: var(--grad);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* RECEIPT CARD */
+        .receipt-card {
+            background: var(--bg3);
+            border: 1px solid var(--border2);
+            border-radius: 28px;
+            padding: 36px;
+            max-width: 580px;
+            width: 100%;
+            position: relative;
+            animation: fadeUp 0.6s 0.3s ease both;
+            overflow: hidden;
+        }
+
+        .receipt-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 15%;
+            right: 15%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(0, 245, 196, 0.5), transparent);
+        }
+
+        .receipt-card::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(79, 141, 255, 0.2), transparent);
+        }
+
+        /* HEADER */
+        .receipt-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 28px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .receipt-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .receipt-brand-icon {
+            width: 38px;
+            height: 38px;
+            background: var(--grad);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .receipt-brand-name {
+            font-size: 1rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+
+        .receipt-brand-sub {
+            font-size: 0.72rem;
+            color: var(--text3);
+            font-family: var(--mono);
+        }
+
+        .receipt-badge {
+            background: rgba(0, 245, 196, 0.1);
+            border: 1px solid rgba(0, 245, 196, 0.25);
+            border-radius: 50px;
+            padding: 5px 14px;
+            font-family: var(--mono);
+            font-size: 0.7rem;
+            color: var(--neon);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            height: fit-content;
+        }
+
+        .badge-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--neon);
+            box-shadow: 0 0 6px var(--neon);
+            animation: blink 2s infinite;
+        }
+
+        @keyframes blink {
+
+            0%,
+            100% {
+                opacity: 1
+            }
+
+            50% {
+                opacity: 0.3
+            }
+        }
+
+        /* META INFO */
+        .receipt-meta {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 16px 18px;
+            margin-bottom: 24px;
+        }
+
+
+        .meta-label {
+            font-family: var(--mono);
+            font-size: 0.65rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--text3);
+            margin-bottom: 4px;
+        }
+
+        .meta-val {
+            font-size: 0.88rem;
+            font-weight: 700;
+            font-family: var(--mono);
+            word-break: break-all;
+        }
+
+        .meta-val.neon {
+            color: var(--neon);
+        }
+
+        .meta-val.blue {
+            color: var(--blue);
+        }
+
+        /* ITEMS TABLE */
+        .items-head {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            font-family: var(--mono);
+            font-size: 0.68rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--text3);
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 8px;
+        }
+
+        .receipt-items {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            margin-bottom: 20px;
+        }
+
+        .receipt-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 11px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        .receipt-item:last-child {
+            border-bottom: none;
+        }
+
+        .ri-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .ri-emoji {
+            width: 34px;
+            height: 34px;
+            background: var(--surface2);
+            border-radius: 9px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.05rem;
+            flex-shrink: 0;
+        }
+
+        .ri-name {
+            font-size: 0.88rem;
+            font-weight: 600;
+        }
+
+        .ri-qty {
+            font-size: 0.75rem;
+            color: var(--text3);
+            font-family: var(--mono);
+            margin-top: 2px;
+        }
+
+        .ri-price {
+            font-size: 0.92rem;
+            font-weight: 700;
+            font-family: var(--mono);
+        }
+
+        /* TOTALS */
+        .totals-section {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 16px 18px;
+            margin-bottom: 24px;
+        }
+
+        .totals-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 0;
+            font-size: 0.88rem;
+        }
+
+        .totals-label {
+            color: var(--text2);
+        }
+
+        .totals-val {
+            font-weight: 600;
+            font-family: var(--mono);
+        }
+
+        .totals-divider {
+            height: 1px;
+            background: var(--border);
+            margin: 8px 0;
+        }
+
+        .totals-total {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 8px;
+        }
+
+        .totals-total-label {
+            font-size: 1rem;
+            font-weight: 800;
+        }
+
+        .totals-total-val {
+            font-size: 1.4rem;
+            font-weight: 800;
+            font-family: var(--mono);
+            background: var(--grad);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* PAYMENT METHOD BADGE */
+        .pay-method-badge {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(79, 141, 255, 0.06);
+            border: 1px solid rgba(79, 141, 255, 0.18);
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-bottom: 24px;
+        }
+
+        .pm-icon {
+            font-size: 1.4rem;
+        }
+
+
+        .pm-label {
+            font-size: 0.72rem;
+            color: var(--text3);
+            font-family: var(--mono);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .pm-val {
+            font-size: 0.9rem;
+            font-weight: 700;
+        }
+
+        /* ACTIONS */
+        .receipt-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .btn-primary {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 14px 22px;
+            border-radius: 12px;
+            background: var(--grad);
+            color: #fff;
+            border: none;
+            font-family: var(--font);
+            font-size: 0.92rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            flex: 1;
+            letter-spacing: -0.01em;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 36px rgba(79, 141, 255, 0.32);
+        }
+
+        .btn-secondary {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 14px 22px;
+            border-radius: 12px;
+            background: transparent;
+            color: var(--text2);
+            border: 1px solid var(--border2);
+            font-family: var(--font);
+            font-size: 0.92rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            flex: 1;
+            letter-spacing: -0.01em;
+        }
+
+        .btn-secondary:hover {
+            background: var(--surface2);
+            color: var(--text);
+        }
+
+        /* CONFETTI EMOJIS */
+        .confetti-wrap {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            pointer-events: none;
+            z-index: 500;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .confetti-particle {
+            position: absolute;
+            top: -40px;
+            font-size: 1.3rem;
+            animation: confettiFall linear forwards;
+        }
+
+        @keyframes confettiFall {
+            to {
+                transform: translateY(110vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+
+        footer {
+            padding: 24px 40px;
+            border-top: 1px solid var(--border);
+            text-align: center;
+            font-size: 0.82rem;
+            color: var(--text3);
+        }
+
+        footer a {
+            color: var(--text2);
+            text-decoration: none;
+        }
+
+        @media print {
+
+            nav,
+            footer,
+            .receipt-actions,
+            .confetti-wrap,
+            .cursor,
+            .cursor-ring {
+                display: none !important;
+            }
+
+            body {
+                background: #fff !important;
+                color: #000 !important;
+                cursor: default !important;
+            }
+
+            .page-wrap {
+                padding: 20px !important;
+            }
+
+            .receipt-card {
+                border: 1px solid #ddd !important;
+                background: #fff !important;
+                color: #000 !important;
+                box-shadow: none !important;
+            }
+
+            .receipt-item,
+            .totals-row,
+            .meta-val,
+            .ri-name,
+            .ri-qty,
+            .ri-price {
+                color: #000 !important;
+            }
+
+            .meta-label,
+            .totals-label,
+            .pm-label {
+                color: #666 !important;
+            }
+
+            .receipt-card::before,
+            .receipt-card::after {
+                display: none !important;
+            }
+
+            :root {
+                --bg3: #fff;
+                --surface: #f5f5f5;
+                --border: #ddd;
+                --text: #000;
+                --text2: #555;
+                --text3: #888;
+            }
+        }
+
+        @media(max-width:600px) {
+            .page-wrap {
+                padding: 88px 12px 40px;
+            }
+
+            .receipt-card {
+                padding: 24px 20px;
+            }
+
+            .cursor,
+            .cursor-ring {
+                display: none;
+            }
+
+            body {
+                cursor: auto;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="cursor" id="cursor"></div>
+    <div class="cursor-ring" id="cursorRing"></div>
+    <div class="confetti-wrap" id="confetti"></div>
+    <div class="page-bg"></div>
+
+    <nav>
+        <a href="/" class="nav-logo">
+            <div class="nav-logo-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                    stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="7" height="7" rx="1" />
+                    <rect x="14" y="3" width="7" height="7" rx="1" />
+                    <rect x="3" y="14" width="7" height="7" rx="1" />
+                    <path d="M14 14h3v3h-3zM17 17h3v3h-3zM20 14v3M14 20h3" />
+                </svg>
+            </div>
+            QuickCart <span>AI</span>
+        </a>
+        <div class="nav-center">
+            <a href="/" class="nav-tab">🏠 Home</a>
+            <a href="/scanner" class="nav-tab">📷 Scanner</a>
+            <a href="/checkout" class="nav-tab">🛒 Checkout</a>
+            <a href="/payment" class="nav-tab">💳 Payment</a>
+            <a href="/receipt" class="nav-tab active">🧾 Receipt</a>
+        </div>
+        <div class="nav-right">
+            <span class="nav-user" id="navUser"></span>
+            <a href="/signin" class="btn-ghost" id="signoutBtn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                    <polyline points="16 17 21 12 16 7" />
+                    <line x1="21" y1="12" x2="9" y2="12" />
+                </svg>
+                Sign Out
+            </a>
+        </div>
+    </nav>
+
+    <div class="page-wrap">
+        <div style="width:100%;max-width:580px;">
+
+            <!-- SUCCESS HERO -->
+            <div class="success-area">
+                <div class="success-ring">
+                    <svg class="success-check" xmlns="http://www.w3.org/2000/svg" width="46" height="46"
+                        viewBox="0 0 24 24" fill="none" stroke="var(--neon)" stroke-width="2.5" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                </div>
+                <h1 class="success-title"><span class="grad-text">Payment Successful!</span></h1>
+                <p class="success-sub">Your order has been confirmed. Here's your digital receipt.</p>
+            </div>
+
+            <!-- RECEIPT CARD -->
+            <div class="receipt-card" id="receiptCard">
+                <div class="receipt-header">
+                    <div class="receipt-brand">
+                        <div class="receipt-brand-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                                fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <rect x="3" y="3" width="7" height="7" rx="1" />
+                                <rect x="14" y="3" width="7" height="7" rx="1" />
+                                <rect x="3" y="14" width="7" height="7" rx="1" />
+                                <path d="M14 14h3v3h-3zM17 17h3v3h-3zM20 14v3M14 20h3" />
+                            </svg>
+                        </div>
+                        <div>
+                            <div class="receipt-brand-name">QuickCart AI</div>
+                            <div class="receipt-brand-sub">DIGITAL RECEIPT</div>
+                        </div>
+                    </div>
+                    <div class="receipt-badge">
+                        <div class="badge-dot"></div>
+                        CONFIRMED
+                    </div>
+                </div>
+
+                <!-- META -->
+                <div class="receipt-meta">
+                    <div class="meta-item">
+                        <div class="meta-label">Receipt No.</div>
+                        <div class="meta-val neon" id="rcReceiptNo">—</div>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-label">Transaction ID</div>
+                        <div class="meta-val blue" id="rcTxnId">—</div>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-label">Order ID</div>
+                        <div class="meta-val" id="rcOrderId">—</div>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-label">Date &amp; Time</div>
+                        <div class="meta-val" id="rcDate">—</div>
+                    </div>
+                </div>
+
+                <!-- ITEMS -->
+                <div class="items-head">
+                    <span>Item</span><span>Amount</span>
+                </div>
+                <div class="receipt-items" id="rcItems">
+                    <div style="color:var(--text3);font-size:0.85rem;padding:8px 0;">Loading items…</div>
+                </div>
+
+                <!-- TOTALS -->
+                <div class="totals-section">
+                    <div class="totals-row"><span class="totals-label">Subtotal</span><span class="totals-val"
+                            id="rcSubtotal">₹0.00</span></div>
+                    <div class="totals-row"><span class="totals-label">GST (5%)</span><span class="totals-val"
+                            id="rcTax">₹0.00</span></div>
+                    <div class="totals-row"><span class="totals-label">Delivery</span><span class="totals-val"
+                            style="color:var(--neon);">Free</span></div>
+                    <div class="totals-divider"></div>
+                    <div class="totals-total">
+                        <span class="totals-total-label">Total Paid</span>
+                        <span class="totals-total-val" id="rcTotal">₹0.00</span>
+                    </div>
+                </div>
+
+                <!-- PAYMENT METHOD -->
+                <div class="pay-method-badge">
+                    <div class="pm-icon" id="rcMethodIcon">💳</div>
+                    <div class="pm-info">
+                        <div class="pm-label">Payment Method</div>
+                        <div class="pm-val" id="rcMethod">—</div>
+                    </div>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                        stroke="var(--neon)" stroke-width="2" style="margin-left:auto;">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                    </svg>
+                </div>
+
+                <!-- ACTIONS -->
+                <div class="receipt-actions">
+                    <button class="btn-primary" onclick="window.print()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2.5">
+                            <polyline points="6 9 6 2 18 2 18 9" />
+                            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+                            <rect x="6" y="14" width="12" height="8" />
+                        </svg>
+                        Download Receipt
+                    </button>
+                    <a class="btn-secondary" href="/">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2.5">
+                            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                            <polyline points="9 22 9 12 15 12 15 22" />
+                        </svg>
+                        Continue Shopping
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <footer>© 2025 QuickCart AI &nbsp;·&nbsp; <a href="/">Home</a> &nbsp;·&nbsp; <a href="#">Support</a></footer>
+
+    <script>
+        const cur = document.getElementById('cursor'), ring = document.getElementById('cursorRing');
+        document.addEventListener('mousemove', e => {
+            cur.style.left = e.clientX + 'px'; cur.style.top = e.clientY + 'px';
+            ring.style.left = e.clientX + 'px'; ring.style.top = e.clientY + 'px';
+        });
+
+        const EMOJIS = ['🥦', '🥛', '🍞', '🌾', '🥑', '🧴', '🍳', '🧀', '🫙', '🍚'];
+        const METHOD_MAP = {
+            upi: { icon: '📱', label: 'UPI Payment' },
+            card: { icon: '💳', label: 'Credit / Debit Card' },
+            wallet: { icon: '👛', label: 'Digital Wallet' }
+        };
+
+        function formatDateTime(isoStr) {
+            try {
+                const d = new Date(isoStr);
+                return d.toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true });
+            } catch { return new Date().toLocaleString('en-IN'); }
+        }
+
+        const API = 'http://localhost:8000/api';
+
+        async function loadReceipt() {
+            const raw = sessionStorage.getItem('qc_receipt');
+            const orderRaw = sessionStorage.getItem('qc_order');
+
+            let receipt = null;
+            if (raw) {
+                try { receipt = JSON.parse(raw); } catch { }
+            }
+
+            // Merge order items if receipt items are empty
+            let orderData = null;
+            if (orderRaw) { try { orderData = JSON.parse(orderRaw); } catch { } }
+
+            let items = (receipt && receipt.items && receipt.items.length > 0)
+                ? receipt.items
+                : (orderData && orderData.items && orderData.items.length > 0)
+                    ? orderData.items
+                    : [];
+
+            // Last resort: fetch live cart from API if still no items
+            if (items.length === 0) {
+                try {
+                    const res = await fetch(`${API}/cart/`);
+                    const cartItems = await res.json();
+                    if (Array.isArray(cartItems) && cartItems.length > 0) {
+                        items = cartItems;
+                    }
+                } catch (e) {
+                    console.warn('Could not fetch cart:', e);
+                }
+            }
+
+            // Build receipt metadata (use stored receipt data or generate fresh)
+            const receiptNo = receipt?.receipt_number || 'QC' + Math.random().toString(16).slice(2, 10).toUpperCase();
+            const txnId = receipt?.transaction_id || '—';
+            const orderId = receipt?.order_id || '—';
+            const timestamp = receipt?.timestamp || new Date().toISOString();
+            const method = receipt?.method || 'upi';
+
+            const subtotal = items.reduce((s, i) => s + (i.price * i.quantity), 0);
+            const tax = subtotal * 0.05;
+            const total = receipt?.total || (subtotal + tax);
+
+            document.getElementById('rcReceiptNo').textContent = receiptNo;
+            document.getElementById('rcTxnId').textContent = txnId;
+            document.getElementById('rcOrderId').textContent = orderId !== '—' ? '#' + orderId : '—';
+            document.getElementById('rcDate').textContent = formatDateTime(timestamp);
+
+            // Items
+            const itemsContainer = document.getElementById('rcItems');
+            if (items.length) {
+                itemsContainer.innerHTML = items.map((item, i) => `
+      <div class="receipt-item">
+        <div class="ri-left">
+          <div class="ri-emoji">${EMOJIS[i % EMOJIS.length]}</div>
+          <div>
+            <div class="ri-name">${item.name}</div>
+            <div class="ri-qty">×${item.quantity} @ ₹${Number(item.price).toFixed(2)}</div>
+          </div>
+        </div>
+        <div class="ri-price">₹${(item.price * item.quantity).toFixed(2)}</div>
+      </div>
+    `).join('');
+            } else {
+                itemsContainer.innerHTML = '<div style="color:var(--text3);font-size:0.85rem;padding:12px 0;">No items found. Please go through checkout again.</div>';
+            }
+
+            document.getElementById('rcSubtotal').textContent = `₹${subtotal.toFixed(2)}`;
+            document.getElementById('rcTax').textContent = `₹${tax.toFixed(2)}`;
+            document.getElementById('rcTotal').textContent = `₹${total.toFixed(2)}`;
+
+            const mData = METHOD_MAP[method] || METHOD_MAP['card'];
+            document.getElementById('rcMethodIcon').textContent = mData.icon;
+            document.getElementById('rcMethod').textContent = mData.label;
+        }
+
+        loadReceipt();
+        setTimeout(launchConfetti, 400);
+        // Nav user display & sign out
+        const _userStr = sessionStorage.getItem('qc_user');
+        if (_userStr) { try { const u = JSON.parse(_userStr); document.getElementById('navUser').innerHTML = `Hello, <strong>${(u.name || u.email || 'User').split(' ')[0]}</strong>`; } catch { } }
+        document.getElementById('signoutBtn').addEventListener('click', async (e) => {
+            e.preventDefault();
+            const tok = sessionStorage.getItem('qc_token');
+            if (tok) { try { await fetch(`${API}/auth/signout`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token: tok }) }); } catch { } }
+            sessionStorage.clear();
+            window.location.href = '/signin';
+        });
+    </script>
+</body>
+
+</html>

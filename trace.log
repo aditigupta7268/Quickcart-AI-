@@ -1,0 +1,20 @@
+Traceback (most recent call last):
+  File "<string>", line 5, in <module>
+    import app.main
+  File "C:\Users\intel\Desktop\quickcart-ai\backend\app\main.py", line 38, in <module>
+    app.include_router(dashboard_router)
+    ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "C:\Users\intel\Desktop\quickcart-ai\.venv\Lib\site-packages\fastapi\applications.py", line 1551, in include_router
+    self.router.include_router(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        router,
+        ^^^^^^^
+    ...<8 lines>...
+        generate_unique_id_function=generate_unique_id_function,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\intel\Desktop\quickcart-ai\.venv\Lib\site-packages\fastapi\routing.py", line 1719, in include_router
+    for r in router.routes:
+             ^^^^^^^^^^^^^
+AttributeError: module 'app.routers.dashboard_router' has no attribute 'routes'. Did you mean: 'router'?
